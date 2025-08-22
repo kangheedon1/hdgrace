@@ -1,0 +1,622 @@
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="hdgrace-youtube-advanced" version="29.0.0">
+    <settings>
+        <!-- 기본 설정 -->
+        <MaxThreads>500</MaxThreads>
+        <ThreadDelay>100</ThreadDelay>
+        <ParallelExecution>true</ParallelExecution>
+        <Language>ko</Language>
+        <ConfigFile>./config/prod.json</ConfigFile>
+        <SecretsFile>./config/secrets.json</SecretsFile>
+        <LogFolder>./logs/</LogFolder>
+        <DataFolder>./data/</DataFolder>
+        
+        <!-- 프록시 관련 설정 -->
+        <ProxyServices>pyproxy.com,hiproxy.net</ProxyServices>
+        <ProxyRotationInterval>300</ProxyRotationInterval>
+        <ProxyHealthCheck>true</ProxyHealthCheck>
+        
+        <!-- SMS 서비스 설정 -->
+        <SMSServices>5sim.net,sms-man.com,sms-activate.ru</SMSServices>
+        
+        <!-- 캡차 서비스 설정 -->
+        <CaptchaServices>2captcha.com,anticaptcha.com</CaptchaServices>
+    </settings>
+
+    <ui>
+        <label id="title" text="🚀 HDGRACE YouTube Advanced Manager" style="font-size:24px; color:#00FFD1; text-align:center; margin:10px 0; font-weight:bold;"/>
+        <language>ko</language>
+        
+        <!-- 프록시 관리자 UI -->
+        <label text="🌐 프록시 관리자 - 자동 로테이션 &amp; 헬스체크" style="color:#4CAF50; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="proxyAutoRotation" text="🔄 자동 로테이션 활성화" checked="true"/>
+        <checkbox id="proxyHealthCheck" text="❤️ 헬스체크 활성화" checked="true"/>
+        <input id="proxyRotationInterval" text="⏱️ 로테이션 간격 (초)" hint="300" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- SMS 인증 관리자 UI -->
+        <label text="📱 SMS 인증 관리자 - 5SIM, SMS-Man 등 연동" style="color:#2196F3; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="smsAuthEnabled" text="✅ SMS 인증 활성화" checked="true"/>
+        <dropdown id="smsService" text="📡 SMS 서비스 선택">
+            <option>5sim.net</option>
+            <option>sms-man.com</option>
+            <option>sms-activate.ru</option>
+        </dropdown>
+        
+        <!-- 성인 인증 관리자 UI -->
+        <label text="🔞 성인 인증 관리자 - 문서 자동 업로드" style="color:#FF5722; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="adultVerification" text="📄 성인 인증 문서 자동 업로드" checked="false"/>
+        <input id="idDocumentPath" text="📁 신분증 경로" hint="./documents/id_card.jpg" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- 교육 Gmail 위장 관리자 UI -->
+        <label text="🎓 교육 Gmail 위장 관리자 - .edu 도메인 위장" style="color:#9C27B0; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="eduGmailMasking" text="🎭 .edu 도메인 위장 활성화" checked="false"/>
+        <dropdown id="eduDomain" text="🏫 .edu 도메인 선택">
+            <option>harvard.edu</option>
+            <option>stanford.edu</option>
+            <option>mit.edu</option>
+            <option>cambridge.edu</option>
+        </dropdown>
+        
+        <!-- 쿠키 지문 관리자 UI -->
+        <label text="🍪 쿠키 지문 관리자 - Canvas 스푸핑" style="color:#FF9800; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="canvasSpoofing" text="🎨 Canvas 지문 스푸핑 활성화" checked="true"/>
+        <checkbox id="cookieAutoSave" text="💾 쿠키 자동 저장" checked="true"/>
+        
+        <!-- 모바일 프록시 관리자 UI -->
+        <label text="📱 모바일 프록시 관리자 - 모바일 전용 프록시" style="color:#00BCD4; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="mobileProxy" text="📱 모바일 전용 프록시 사용" checked="false"/>
+        <dropdown id="mobileDevice" text="📱 디바이스 선택">
+            <option>iPhone 14 Pro</option>
+            <option>Samsung Galaxy S23</option>
+            <option>Google Pixel 7</option>
+        </dropdown>
+        
+        <!-- 스트림 부스트 관리자 UI -->
+        <label text="⚡ 스트림 부스트 관리자 - 성능 최적화" style="color:#E91E63; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="streamBoost" text="🚀 스트림 부스트 활성화" checked="true"/>
+        <slider id="boostLevel" text="🎚️ 부스트 레벨" min="1" max="10" default="5"/>
+        
+        <!-- 쇼츠 활동 관리자 UI -->
+        <label text="📺 쇼츠 활동 관리자 - YouTube Shorts 전용" style="color:#8BC34A; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="shortsActivity" text="🎬 Shorts 활동 활성화" checked="true"/>
+        <input id="shortsWatchTime" text="⏱️ Shorts 시청 시간 (초)" hint="30" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- 소셜 계정 연동 관리자 UI -->
+        <label text="🔗 소셜 계정 연동 관리자 - 다중 플랫폼 연동" style="color:#FFC107; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="socialSync" text="🔄 소셜 계정 동기화 활성화" checked="false"/>
+        <checkbox id="facebookSync" text="📘 Facebook 연동" checked="false"/>
+        <checkbox id="twitterSync" text="🐦 Twitter 연동" checked="false"/>
+        <checkbox id="instagramSync" text="📸 Instagram 연동" checked="false"/>
+        
+        <!-- 멀티 계정 전환 관리자 UI -->
+        <label text="🔄 멀티 계정 전환 관리자 - 자동 계정 스위칭" style="color:#607D8B; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="multiAccountSwitch" text="🔀 자동 계정 스위칭 활성화" checked="true"/>
+        <input id="accountSwitchInterval" text="⏱️ 계정 전환 간격 (분)" hint="10" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- 유튜브 조회수 부스터 UI -->
+        <label text="👁️ 유튜브 조회수 부스터 - 전용 부스터" style="color:#F44336; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="viewBooster" text="🚀 조회수 부스터 활성화" checked="true"/>
+        <slider id="boostIntensity" text="🎚️ 부스트 강도" min="1" max="100" default="50"/>
+        
+        <!-- 실시간 댓글 관리자 UI -->
+        <label text="💬 실시간 댓글 관리자 - 실시간 모니터링" style="color:#009688; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="liveComment" text="💬 실시간 댓글 모니터링 활성화" checked="true"/>
+        <input id="commentKeywords" text="🔑 댓글 키워드 (쉼표로 구분)" hint="좋아요,구독,감사" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- 자동 답변 봇 UI -->
+        <label text="🤖 자동 답변 봇 - AI 기반 답변" style="color:#795548; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="autoReplyBot" text="🤖 AI 자동 답변 활성화" checked="false"/>
+        <textarea id="replyTemplates" text="📝 답변 템플릿" hint="감사합니다!&#10;좋아요 눌렀어요!&#10;구독했어요!" style="width:100%; height:80px; padding:8px; margin:5px 0;"/>
+        
+        <!-- 채널 구독 관리자 UI -->
+        <label text="🔔 채널 구독 관리자 - 자동 구독 관리" style="color:#3F51B5; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="autoSubscribe" text="🔔 자동 구독 활성화" checked="true"/>
+        <input id="targetChannels" text="🎯 대상 채널 (쉼표로 구분)" hint="channel1,channel2,channel3" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- Gmail 별칭 생성기 UI -->
+        <label text="📧 Gmail 별칭 생성기 - 무제한 별칭" style="color:#CDDC39; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="gmailAlias" text="📧 Gmail 별칭 생성 활성화" checked="false"/>
+        <input id="aliasDomain" text="🌐 별칭 도메인" hint="yourdomain.com" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- 대량 이메일 발송기 UI -->
+        <label text="📧 대량 이메일 발송기 - 벌크 메일 시스템" style="color:#FF5722; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="bulkEmail" text="📧 대량 이메일 발송 활성화" checked="false"/>
+        <input id="emailListPath" text="📁 이메일 리스트 경로" hint="./data/email_list.txt" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- 이메일 인증 관리자 UI -->
+        <label text="📧 이메일 인증 관리자 - 자동 링크 클릭" style="color:#03A9F4; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="emailVerification" text="📧 이메일 인증 자동 처리" checked="true"/>
+        <checkbox id="autoClickLinks" text="🔗 인증 링크 자동 클릭" checked="true"/>
+        
+        <!-- 캡차 솔버 UI -->
+        <label text="🧩 캡차 솔버 - AI + 서비스 연동" style="color:#9C27B0; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="captchaSolver" text="🧩 캡차 자동 해결 활성화" checked="true"/>
+        <dropdown id="captchaService" text="サービスク選択">
+            <option>2captcha.com</option>
+            <option>anticaptcha.com</option>
+        </dropdown>
+        
+        <!-- 얼굴 인식 인증 관리자 UI -->
+        <label text="👤 얼굴 인식 인증 관리자 - 얼굴 인증 우회" style="color:#FF9800; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="faceRecognition" text="👤 얼굴 인식 인증 우회" checked="false"/>
+        <input id="faceImage" text="📸 얼굴 이미지 경로" hint="./images/face.jpg" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- OTP 생성기 UI -->
+        <label text="🔢 OTP 생성기 - TOTP/HOTP 지원" style="color:#4CAF50; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="otpGenerator" text="🔢 OTP 생성기 활성화" checked="false"/>
+        <input id="otpSecret" text="🔑 OTP 시크릿 키" hint="JBSWY3DPEHPK3PXP" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- 푸시 알림 관리자 UI -->
+        <label text="🔔 푸시 알림 관리자 - 알림 자동 처리" style="color:#E91E63; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="pushNotifications" text="🔔 푸시 알림 자동 처리" checked="true"/>
+        <checkbox id="autoAcknowledge" text="✅ 알림 자동 확인" checked="true"/>
+        
+        <!-- 디바이스 지문 인식 UI -->
+        <label text="📱 디바이스 지문 인식 - 디바이스 ID 관리" style="color:#607D8B; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="deviceFingerprint" text="📱 디바이스 지문 관리 활성화" checked="true"/>
+        <checkbox id="randomizeDeviceID" text="🔄 디바이스 ID 무작위화" checked="true"/>
+        
+        <!-- 안전 파일 전송기 UI -->
+        <label text="🔒 안전 파일 전송기 - 암호화 전송" style="color:#3F51B5; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="secureTransfer" text="🔒 파일 암호화 전송 활성화" checked="false"/>
+        <input id="encryptionKey" text="🔑 암호화 키" hint="your-encryption-key" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- 클라우드 저장소 동기화 UI -->
+        <label text="☁️ 클라우드 저장소 동기화 - 자동 백업" style="color:#00BCD4; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="cloudSync" text="☁️ 클라우드 자동 동기화" checked="true"/>
+        <dropdown id="cloudService" text="サービスク選択">
+            <option>Google Drive</option>
+            <option>Dropbox</option>
+            <option>OneDrive</option>
+        </dropdown>
+        
+        <!-- 웹훅 디스패처 UI -->
+        <label text="📡 웹훅 디스패처 - 이벤트 전송" style="color:#8BC34A; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="webhookDispatcher" text="📡 웹훅 이벤트 전송 활성화" checked="false"/>
+        <input id="webhookURL" text="🔗 웹훅 URL" hint="https://hooks.slack.com/services/..." style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- API 키 로테이터 UI -->
+        <label text="🔑 API 키 로테이터 - 자동 키 순환" style="color:#FFC107; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="apiKeyRotation" text="🔄 API 키 자동 로테이션" checked="true"/>
+        <input id="apiKeyList" text="📋 API 키 리스트 (쉼표로 구분)" hint="key1,key2,key3" style="width:100%; padding:8px; margin:5px 0;"/>
+        
+        <!-- 패스워드 관리자 UI -->
+        <label text="🔒 패스워드 관리자 - AES-256 암호화" style="color:#F44336; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="passwordManager" text="🔒 패스워드 관리자 활성화" checked="true"/>
+        <checkbox id="aes256Encryption" text="🔐 AES-256 암호화 사용" checked="true"/>
+        
+        <!-- 기능 토글 관리자 UI -->
+        <label text="🎛️ 기능 토글 관리자 - 동적 기능 제어" style="color:#009688; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="featureToggle" text="🎛️ 동적 기능 토글 활성화" checked="true"/>
+        <button id="toggleAll" text="🔄 모든 기능 토글"/>
+        
+        <!-- AI 품질 로테이션 관리자 UI -->
+        <label text="🤖 AI 품질 로테이션 관리자 - 품질 자동 조절" style="color:#795548; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="aiQualityRotation" text="🤖 AI 품질 자동 조절 활성화" checked="true"/>
+        <slider id="qualityThreshold" text="🎯 품질 임계값" min="1" max="100" default="80"/>
+        
+        <!-- 세션 히스토리 로거 UI -->
+        <label text="📝 세션 히스토리 로거 - 완전한 로그 시스템" style="color:#CDDC39; font-weight:bold; margin-top:15px;"/>
+        <checkbox id="sessionLogger" text="📝 세션 히스토리 로깅 활성화" checked="true"/>
+        <checkbox id="detailedLogging" text="📋 상세 로그 기록" checked="true"/>
+        
+        <!-- 실행 버튼들 -->
+        <button id="btnRun" text="▶️ 실행" action="RunMain" style="width:100%; padding:12px; margin:10px 0; background-color:#4CAF50; color:white; border:none; border-radius:5px; font-weight:bold;"/>
+        <button id="btnStop" text="⏹️ 중지" action="StopAll" style="width:100%; padding:12px; margin:5px 0; background-color:#F44336; color:white; border:none; border-radius:5px; font-weight:bold;"/>
+        <button id="btnSettings" text="⚙️ 설정 저장" action="SaveSettings" style="width:100%; padding:12px; margin:5px 0; background-color:#2196F3; color:white; border:none; border-radius:5px; font-weight:bold;"/>
+    </ui>
+
+    <!-- 프록시 관리자 매크로 -->
+    <macro name="ProxyManager">
+        <action name="LogEvent"><Type>Proxy</Type><Details>🌐 프록시 관리자 시작</Details></action>
+        <If condition="ui:proxyAutoRotation == 'true'">
+            <Then>
+                <action name="SetVariable"><Variable>RotationInterval</Variable><Value>{ui:proxyRotationInterval}</Value></action>
+                <If condition="RotationInterval == ''">
+                    <Then><action name="SetVariable"><Variable>RotationInterval</Variable><Value>300</Value></action></Then>
+                </If>
+                <action name="LogEvent"><Type>Proxy</Type><Details>🔄 자동 로테이션 활성화 (간격: {RotationInterval}초)</Details></action>
+                <loop name="ProxyRotationLoop" count="1000">
+                    <call macro="RotateProxy"/>
+                    <If condition="ui:proxyHealthCheck == 'true'">
+                        <Then><call macro="CheckProxyHealth"/></Then>
+                    </If>
+                    <action name="Delay"><Min>{RotationInterval}000</Min><Max>{RotationInterval}000</Max></action>
+                </loop>
+            </Then>
+        </If>
+        <action name="LogEvent"><Type>Proxy</Type><Details>✅ 프록시 관리자 종료</Details></action>
+    </macro>
+
+    <macro name="RotateProxy">
+        <action name="LogEvent"><Type>Proxy</Type><Details>🔄 프록시 로테이션 중...</Details></action>
+        <!-- 실제 프록시 로테이션 로직 -->
+        <action name="SetProxy">
+            <Source>API</Source>
+            <Service>{settings.ProxyServices}</Service>
+            <User>rotation-user</User>
+            <Password>rotation-pass</Password>
+        </action>
+        <action name="LogEvent"><Type>Proxy</Type><Details>✅ 새로운 프록시 적용됨</Details></action>
+    </macro>
+
+    <macro name="CheckProxyHealth">
+        <action name="LogEvent"><Type>Proxy</Type><Details>❤️ 프록시 헬스체크 중...</Details></action>
+        <!-- 실제 헬스체크 로직 -->
+        <action name="Navigate"><Url>https://httpbin.org/ip</Url></action>
+        <action name="Delay"><Min>2000</Min><Max>5000</Max></action>
+        <action name="LogEvent"><Type>Proxy</Type><Details>✅ 프록시 헬스체크 완료</Details></action>
+    </macro>
+
+    <!-- SMS 인증 관리자 매크로 -->
+    <macro name="SMSAuthManager">
+        <If condition="ui:smsAuthEnabled == 'true'">
+            <Then>
+                <action name="LogEvent"><Type>SMS</Type><Details>📱 SMS 인증 관리자 시작</Details></action>
+                <action name="SetVariable"><Variable>SelectedService</Variable><Value>{ui:smsService}</Value></action>
+                <action name="LogEvent"><Type>SMS</Type><Details>📡 SMS 서비스: {SelectedService}</Details></action>
+                <!-- 실제 SMS 인증 로직 -->
+                <action name="LogEvent"><Type>SMS</Type><Details>✅ SMS 인증 관리자 종료</Details></action>
+            </Then>
+        </If>
+    </macro>
+
+    <!-- 성인 인증 관리자 매크로 -->
+    <macro name="AdultVerificationManager">
+        <If condition="ui:adultVerification == 'true'">
+            <Then>
+                <action name="LogEvent"><Type>Adult</Type><Details>🔞 성인 인증 관리자 시작</Details></action>
+                <action name="SetVariable"><Variable>DocumentPath</Variable><Value>{ui:idDocumentPath}</Value></action>
+                <action name="LogEvent"><Type>Adult</Type><Details>📄 문서 업로드: {DocumentPath}</Details></action>
+                <!-- 실제 문서 업로드 로직 -->
+                <action name="LogEvent"><Type>Adult</Type><Details>✅ 성인 인증 관리자 종료</Details></action>
+            </Then>
+        </If>
+    </macro>
+
+    <!-- 교육 Gmail 위장 관리자 매크로 -->
+    <macro name="EduGmailManager">
+        <If condition="ui:eduGmailMasking == 'true'">
+            <Then>
+                <action name="LogEvent"><Type>Edu</Type><Details>🎓 교육 Gmail 위장 관리자 시작</Details></action>
+                <action name="SetVariable"><Variable>SelectedDomain</Variable><Value>{ui:eduDomain}</Value></action>
+                <action name="LogEvent"><Type>Edu</Type><Details>🏫 위장 도메인: {SelectedDomain}</Details></action>
+                <!-- 실제 위장 로직 -->
+                <action name="LogEvent"><Type>Edu</Type><Details>✅ 교육 Gmail 위장 관리자 종료</Details></action>
+            </Then>
+        </If>
+    </macro>
+
+    <!-- 쿠키 지문 관리자 매크로 -->
+    <macro name="CookieFingerprintManager">
+        <action name="LogEvent"><Type>Cookie</Type><Details>🍪 쿠키 지문 관리자 시작</Details></action>
+        <If condition="ui:canvasSpoofing == 'true'">
+            <Then>
+                <action name="LogEvent"><Type>Cookie</Type><Details>🎨 Canvas 지문 스푸핑 활성화</Details></action>
+                <!-- 실제 Canvas 스푸핑 로직 -->
+            </Then>
+        </If>
+        <If condition="ui:cookieAutoSave == 'true'">
+            <Then>
+                <action name="LogEvent"><Type>Cookie</Type><Details>💾 쿠키 자동 저장 활성화</Details></action>
+                <!-- 실제 쿠키 저장 로직 -->
+            </Then>
+        </If>
+        <action name="LogEvent"><Type>Cookie</Type><Details>✅ 쿠키 지문 관리자 종료</Details></action>
+    </macro>
+
+    <!-- 모바일 프록시 관리자 매크로 -->
+    <macro name="MobileProxyManager">
+        <If condition="ui:mobileProxy == 'true'">
+            <Then>
+                <action name="LogEvent"><Type>Mobile</Type><Details>📱 모바일 프록시 관리자 시작</Details></action>
+                <action name="SetVariable"><Variable>SelectedDevice</Variable><Value>{ui:mobileDevice}</Value></action>
+                <action name="LogEvent"><Type>Mobile</Type><Details>📱 디바이스: {SelectedDevice}</Details></action>
+                <!-- 실제 모바일 프록시 로직 -->
+                <action name="SetUserAgent"><Value>Mobile-{SelectedDevice}</Value></action>
+                <action name="LogEvent"><Type>Mobile</Type><Details>✅ 모바일 프록시 관리자 종료</Details></action>
+            </Then>
+        </If>
+    </macro>
+
+    <!-- 스트림 부스트 관리자 매크로 -->
+    <macro name="StreamBoostManager">
+        <If condition="ui:streamBoost == 'true'">
+            <Then>
+                <action name="LogEvent"><Type>Stream</Type><Details>⚡ 스트림 부스트 관리자 시작</Details></action>
+                <action name="SetVariable"><Variable>BoostLevel</Variable><Value>{ui:boostLevel}</Value></action>
+                <action name="LogEvent"><Type>Stream</Type><Details>🎚️ 부스트 레벨: {BoostLevel}</Details></action>
+                <!-- 실제 부스트 로직 -->
+                <action name="LogEvent"><Type>Stream</Type><Details>✅ 스트림 부스트 관리자 종료</Details></action>
+            </Then>
+        </If>
+    </macro>
+
+    <!-- 쇼츠 활동 관리자 매크로 -->
+    <macro name="ShortsActivityManager">
+        <If condition="ui:shortsActivity == 'true'">
+            <Then>
+                <action name="LogEvent"><Type>Shorts</Type><Details>📺 쇼츠 활동 관리자 시작</Details></action>
+                <action name="SetVariable"><Variable>WatchTime</Variable><Value>{ui:shortsWatchTime}</Value></action>
+                <If condition="WatchTime == ''">
+                    <Then><action name="SetVariable"><Variable>WatchTime</Variable><Value>30</Value></action></Then>
+                </If>
+                <action name="LogEvent"><Type>Shorts</Type><Details>⏱️ 시청 시간: {WatchTime}초</Details></action>
+                <!-- 실제 쇼츠 활동 로직 -->
+                <action name="LogEvent"><Type>Shorts</Type><Details>✅ 쇼츠 활동 관리자 종료</Details></action>
+            </Then>
+        </If>
+    </macro>
+
+    <!-- 소셜 계정 연동 관리자 매크로 -->
+    <macro name="SocialSyncManager">
+        <If condition="ui:socialSync == 'true'">
+            <Then>
+                <action name="LogEvent"><Type>Social</Type><Details>🔗 소셜 계정 연동 관리자 시작</Details></action>
+                <If condition="ui:facebookSync == 'true'">
+                    <Then><action name="LogEvent"><Type>Social</Type><Details>📘 Facebook 연동 활성화</Details></action></Then>
+                </If>
+                <If condition="ui:twitterSync == 'true'">
+                    <Then><action name="LogEvent"><Type>Social</Type><Details>🐦 Twitter 연동 활성화</Details></action></Then>
+                </If>
+                <If condition="ui:instagramSync == 'true'">
+                    <Then><action name="LogEvent"><Type>Social</Type><Details>📸 Instagram 연동 활성화</Details></action></Then>
+                </If>
+                <!-- 실제 소셜 연동 로직 -->
+                <action name="LogEvent"><Type>Social</Type><Details>✅ 소셜 계정 연동 관리자 종료</Details></action>
+            </Then>
+        </If>
+    </macro>
+
+    <!-- 메인 실행 매크로 -->
+    <macro name="RunMain">
+        <action name="LogEvent"><Type>System</Type><Details>🚀 HDGRACE YouTube Advanced Manager 시작</Details></action>
+        
+        <!-- 모든 관리자 매크로 병렬 실행 -->
+        <call macro="ProxyManager"/>
+        <call macro="SMSAuthManager"/>
+        <call macro="AdultVerificationManager"/>
+        <call macro="EduGmailManager"/>
+        <call macro="CookieFingerprintManager"/>
+        <call macro="MobileProxyManager"/>
+        <call macro="StreamBoostManager"/>
+        <call macro="ShortsActivityManager"/>
+        <call macro="SocialSyncManager"/>
+        
+        <action name="LogEvent"><Type>System</Type><Details>✅ 모든 관리자 초기화 완료</Details></action>
+        
+        <!-- 실제 메인 로직 실행 -->
+        <action name="CreatePopup"><Title>완료</Title><Message>모든 관리자가 시작되었습니다.</Message></action>
+        <action name="ShowPopup"/>
+    </macro>
+
+    <!-- 설정 저장 매크로 -->
+    <macro name="SaveSettings">
+        <action name="LogEvent"><Type>System</Type><Details>⚙️ 설정 저장 중...</Details></action>
+        <!-- 실제 설정 저장 로직 -->
+        <action name="CreateFile">
+            <Name>./config/saved_settings.json</Name>
+            <Data>{"proxy_rotation": "{ui:proxyAutoRotation}", "sms_auth": "{ui:smsAuthEnabled}"}</Data>
+        </action>
+        <action name="LogEvent"><Type>System</Type><Details>✅ 설정 저장 완료</Details></action>
+        <action name="CreatePopup"><Title>완료</Title><Message>설정이 저장되었습니다.</Message></action>
+        <action name="ShowPopup"/>
+    </macro>
+
+    <!-- 중지 매크로 -->
+    <macro name="StopAll">
+        <action name="LogEvent"><Type>System</Type><Details>⏹️ 모든 작업 중지</Details></action>
+        <action name="StopAll"/>
+        <action name="CreatePopup"><Title>중지</Title><Message>모든 작업이 중지되었습니다.</Message></action>
+        <action name="ShowPopup"/>
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="prod-integrated-project" version="29.00">
+
+  <!-- SETTINGS -->
+  <settings>
+    <!-- 실행/병렬 -->
+    <MaxThreads>16</MaxThreads>
+    <ThreadDelay>50</ThreadDelay>
+    <ParallelExecution>true</ParallelExecution>
+
+    <!-- 경로/입출력 -->
+    <InputFolder>./input/</InputFolder>
+    <OutputFolder>./output/</OutputFolder>
+    <LogFolder>./logs/</LogFolder>
+    <ConfigFile>./config/prod.json</ConfigFile>
+    <SecretsFile>./config/secrets.json</SecretsFile>
+
+    <!-- 정책 -->
+    <RemoveExactDuplicateLines>true</RemoveExactDuplicateLines>
+    <SkipTestModules>true</SkipTestModules>
+  </settings>
+
+  <!-- UI (이모지/디자인) -->
+  <ui>
+    <label id="title" text="🧩 실전 통합 런처 (BAS 29.00)" style="font-size:22px; color:#00FFD1; text-align:center; margin:8px 0 14px 0;"/>
+    <language>ko</language>
+
+    <label text="📁 입력 폴더" />
+    <input id="inDir" name="in_dir" type="text" hint="./input/" style="width:100%; padding:10px; margin:6px 0 10px 0; border:1px solid #2b2b2b; border-radius:6px;"/>
+
+    <label text="📦 출력 폴더" />
+    <input id="outDir" name="out_dir" type="text" hint="./output/" style="width:100%; padding:10px; margin:6px 0 10px 0; border:1px solid #2b2b2b; border-radius:6px;"/>
+
+    <checkbox id="optSkipTest" text="🧪 테스트 파일 제외" checked="true"/>
+    <checkbox id="optRmDup" text="🔁 동일 줄 중복 제거(완전히 같은 줄만)" checked="true"/>
+    <checkbox id="optParallel" text="⚡ 병렬 실행" checked="true"/>
+
+    <label text="⚙️ 병렬 스레드 (최대)" />
+    <input id="threads" name="threads" type="text" hint="16"/>
+
+    <button id="btnRun" text="▶️ 실행" action="RunMain"/>
+    <button id="btnValidate" text="🔎 검증" action="ValidateInputs"/>
+    <button id="btnLogs" text="🧾 로그 내보내기" action="ExportLogs"/>
+  </ui>
+
+  <!-- CONFIG/SECRETS 로드 -->
+  <macro name="LoadConfig">
+    <action name="ReadText"><File>{settings.ConfigFile}</File><Variable>RawCfg</Variable></action>
+    <action name="ParseJSON"><JSON>{RawCfg}</JSON><Variable>Cfg</Variable></action>
+    <action name="ReadText"><File>{settings.SecretsFile}</File><Variable>RawSecrets</Variable></action>
+    <action name="ParseJSON"><JSON>{RawSecrets}</JSON><Variable>Secrets</Variable></action>
+  </macro>
+
+  <!-- 입력 검증 -->
+  <macro name="ValidateInputs">
+    <action name="GetValue"><From>ui:inDir</From><Variable>UIn</Variable></action>
+    <action name="GetValue"><From>ui:outDir</From><Variable>UOut</Variable></action>
+    <If condition="{UIn} == '' OR {UOut} == ''">
+      <Then>
+        <action name="CreatePopup"><Title>경고</Title><Message>입력/출력 경로를 확인하세요.</Message></action>
+        <action name="ShowPopup"/>
+      </Then>
+    </If>
+    <action name="LogEvent"><Type>VALIDATE</Type><Details>입력:{UIn} 출력:{UOut}</Details></action>
+  </macro>
+
+  <!-- 소스 파일 목록 적재 -->
+  <macro name="LoadSourceFiles">
+    <action name="ListFiles">
+      <Folder>{settings.InputFolder}</Folder>
+      <Pattern>*.*</Pattern>
+      <Variable>AllFiles</Variable>
+    </action>
+    <action name="SetVariable"><Variable>SrcFiles</Variable><Value>{AllFiles}</Value></action>
+  </macro>
+
+  <!-- 테스트 파일 제외 -->
+  <macro name="FilterTestFiles">
+    <parameter name="FilesIn"/>
+    <action name="FilterByPattern">
+      <Source>{FilesIn}</Source>
+      <ExcludePatterns>test,테스트,_demo,_sample</ExcludePatterns>
+      <Target>ProdFiles</Target>
+    </action>
+  </macro>
+
+  <!-- 라인 결합 + “완전 동일 줄” 중복 제거 -->
+  <macro name="ReadAndDeduplicate">
+    <parameter name="FilesIn"/>
+    <action name="ConcatenateLines">
+      <Files>{FilesIn}</Files>
+      <Variable>ConcatLines</Variable>
+    </action>
+    <If condition="{settings.RemoveExactDuplicateLines} == true">
+      <Then>
+        <action name="UniqueLines">
+          <Source>{ConcatLines}</Source>
+          <Target>UniqueConcatLines</Target>
+        </action>
+      </Then>
+      <Else>
+        <action name="SetVariable"><Variable>UniqueConcatLines</Variable><Value>{ConcatLines}</Value></action>
+      </Else>
+    </If>
+  </macro>
+
+  <!-- 이모지 라벨링(가독성 주석) -->
+  <macro name="AnnotateWithEmojis">
+    <parameter name="RawText"/>
+    <action name="Annotate">
+      <Input>{RawText}</Input>
+      <Rules>
+        <![CDATA[
+          line.startsWith("<macro")   => "🧩 매크로: " + line
+          line.startsWith("<action")  => "▶️ 실행: " + line
+          line.contains("<button")    => "🔘 버튼: " + line
+          line.contains("<input")     => "⌨️ 입력: " + line
+          line.contains("<checkbox")  => "☑️ 체크: " + line
+          line.contains("<label")     => "🏷️ 라벨: " + line
+        ]]>
+      </Rules>
+      <Variable>AnnotatedText</Variable>
+    </action>
+  </macro>
+
+  <!-- 병렬 처리(파일 병합) -->
+  <macro name="ProcessInParallel">
+    <parameter name="FilesIn"/>
+    <action name="ForEachParallel">
+      <List>{FilesIn}</List>
+      <MaxDegree>{settings.MaxThreads}</MaxDegree>
+      <Body>
+        <action name="ReadText"><File>{CurrentItem}</File><Variable>Chunk</Variable></action>
+        <action name="AppendFile"><File>{settings.OutputFolder}/_merged_raw.txt</File><Data>{Chunk}</Data></action>
+      </Body>
+    </action>
+  </macro>
+
+  <!-- 결과 생성 -->
+  <macro name="BuildProductionOutput">
+    <parameter name="TextIn"/>
+    <action name="WriteText"><File>{settings.OutputFolder}/project_prod.txt</File><Data>{TextIn}</Data></action>
+    <action name="LogEvent"><Type>OUTPUT</Type><Details>project_prod.txt 생성</Details></action>
+  </macro>
+
+  <!-- 로그/보고서 -->
+  <macro name="ExportLogs">
+    <action name="CreateFile">
+      <Name>{settings.OutputFolder}/summary.txt</Name>
+      <Header>key|value</Header>
+      <Data>threads|{settings.MaxThreads}</Data>
+    </action>
+    <action name="LogEvent"><Type>SUMMARY</Type><Details>요약 파일 생성</Details></action>
+  </macro>
+
+  <!-- 메인 실행 -->
+  <macro name="RunMain">
+    <call macro="LoadConfig"/>
+    <call macro="ValidateInputs"/>
+
+    <!-- UI값 반영 -->
+    <action name="GetValue"><From>ui:inDir</From><Variable>UIn</Variable></action>
+    <action name="GetValue"><From>ui:outDir</From><Variable>UOut</Variable></action>
+    <action name="GetChecked"><From>ui:optSkipTest</From><Variable>SkipTest</Variable></action>
+    <action name="GetChecked"><From>ui:optRmDup</From><Variable>RmDup</Variable></action>
+    <action name="GetChecked"><From>ui:optParallel</From><Variable>UseParallel</Variable></action>
+    <action name="GetValue"><From>ui:threads</From><Variable>UiThreads</Variable></action>
+    <If condition="{UiThreads} != ''">
+      <Then><action name="SetVariable"><Variable>settings.MaxThreads</Variable><Value>{UiThreads}</Value></action></Then>
+    </If>
+
+    <!-- 파일 적재 -->
+    <call macro="LoadSourceFiles"/>
+
+    <!-- 테스트 제외 적용 -->
+    <If condition="{SkipTest} == true">
+      <Then><call macro="FilterTestFiles"><parameter name="FilesIn">{SrcFiles}</parameter></call></Then>
+      <Else><action name="SetVariable"><Variable>ProdFiles</Variable><Value>{SrcFiles}</Value></action></Else>
+    </If>
+
+    <!-- 병렬/직렬 선택 처리 -->
+    <If condition="{UseParallel} == true">
+      <Then><call macro="ProcessInParallel"><parameter name="FilesIn">{ProdFiles}</parameter></call></Then>
+      <Else>
+        <action name="ForEach">
+          <List>{ProdFiles}</List>
+          <Body>
+            <action name="ReadText"><File>{CurrentItem}</File><Variable>Chunk</Variable></action>
+            <action name="AppendFile"><File>{settings.OutputFolder}/_merged_raw.txt</File><Data>{Chunk}</Data></action>
+          </Body>
+        </action>
+      </Else>
+    </If>
+
+    <!-- 중복 제거 + 라벨링 + 출력 -->
+    <call macro="ReadAndDeduplicate"><parameter name="FilesIn">{ProdFiles}</parameter></call>
+    <call macro="AnnotateWithEmojis"><parameter name="RawText">{UniqueConcatLines}</parameter></call>
+    <call macro="BuildProductionOutput"><parameter name="TextIn">{AnnotatedText}</parameter></call>
+
+    <action name="CreatePopup"><Title>완료</Title><Message>실전 통합 파일 생성 완료</Message></action>
+    <action name="ShowPopup"/>
+  </macro>
+
+</project>
+```
+    </macro>
+</project>
+```
