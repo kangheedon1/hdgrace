@@ -1,0 +1,1214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="hdgraceyoutube" version="25.6.20">
+    <config>
+        <threads>500</threads>
+        <timeout>30000</timeout>
+        <retry_count>3</retry_count>
+        <delay_between_retries>1000</delay_between_retries>
+    </config>
+
+    <functions>
+        <function name="log" params="message">
+            <action name="log" params="${message}"/>
+        </function>
+        <function name="sleep" params="delay">
+            <action name="sleep" delay="${delay}"/>
+        </function>
+        <function name="http_request" params="url,method">
+            <action name="http_client" url="${url}" method="${method}"/>
+        </function>
+        <function name="get_random_delay" params="min,max">
+            <action name="random" min="${min}" max="${max}" variable="random_delay"/>
+            <action name="return" value="${random_delay}"/>
+        </function>
+    </functions>
+
+    <!-- UI 버튼 및 설정 인터페이스 -->
+    <ui>
+        <theme>dark</theme>
+        <language>ko_KR</language>
+        <components>
+            <!-- 메인 실행 컨트롤 -->
+            <component name="main_control" position="top_left">
+                <button name="start_button" text="시작" color="green" onclick="set_variable('bot_running', 'true'); call_macro('start')"/>
+                <button name="stop_button" text="정지" color="red" onclick="set_variable('bot_running', 'false')"/>
+                <button name="pause_button" text="일시정지" color="yellow" onclick="set_variable('bot_paused', 'true')"/>
+                <button name="resume_button" text="재개" color="blue" onclick="set_variable('bot_paused', 'false')"/>
+            </component>
+
+            <!-- 기능 선택 On/Off 버튼 -->
+            <component name="feature_control" position="left">
+                <!-- LIVE 관련 기능 -->
+                <checkbox name="live_viewers_enabled" label="🟢 LIVE 고정 시청자 유지" default="true"/>
+                <checkbox name="live_chat_enabled" label="🤖 LIVE 자동 채팅 응답" default="true"/>
+                
+                <!-- Shorts 관련 기능 -->
+                <checkbox name="shorts_viewing_enabled" label="🟣 Shorts 시청 최적화" default="true"/>
+                <checkbox name="shorts_likes_enabled" label="❤️ Shorts 좋아요 자동화" default="true"/>
+                
+                <!-- 채널 관리 기능 -->
+                <checkbox name="channel_creation_enabled" label="📷 유튜브 채널 생성" default="true"/>
+                <checkbox name="profile_update_enabled" label="🖼 지메일 프로필 변경" default="true"/>
+                
+                <!-- 계정 보안 기능 -->
+                <checkbox name="gmail_security_enabled" label="🔐 지메일 보안 설정 자동화" default="true"/>
+                <checkbox name="sms_verification_enabled" label="📱 SMS 인증 자동화" default="true"/>
+                <checkbox name="captcha_solving_enabled" label="🧩 CAPTCHA 자동 해결" default="true"/>
+                
+                <!-- 조회수 알고리즘 -->
+                <checkbox name="view_algorithm_enabled" label="🔁 조회수 반복 시청 알고리즘" default="true"/>
+                <checkbox name="deep_link_enabled" label="🔗 딥링크 반복 시청" default="true"/>
+            </component>
+
+            <!-- 설정 입력 필드 -->
+            <component name="settings_input" position="right">
+                <!-- API 키 입력 -->
+                <textfield name="fingerprint_api_key" label="🔑 Fingerprint API Key" placeholder="FingerprintSwitcher API 키"/>
+                <textfield name="captcha_api_key" label="🔐 2Captcha API Key" placeholder="2Captcha API 키"/>
+                <textfield name="sms_api_key" label="📱 SMS 인증 API Key" placeholder="SMS-activate, 5sim 등 API 키"/>
+                
+                <!-- 프록시 설정 -->
+                <combobox name="proxy_type" label="🌐 Proxy 설정" list="random_kr_proxy|pyproxy|manual_proxy" default="random_kr_proxy"/>
+                <textfield name="proxy_list" label="Manual Proxy List" placeholder="ip:port:username:password (쉼표로 구분)"/>
+                
+                <!-- 언어 및 국가 설정 -->
+                <combobox name="language_setting" label="🧭 언어 설정" list="ko_KR|en_US|ja_JP|zh_CN|es_ES" default="ko_KR"/>
+                <combobox name="country_setting" label="🌍 국가 설정" list="KR|US|JP|CN|DE|FR|GB" default="KR"/>
+            </component>
+
+            <!-- 상태 표시 -->
+            <component name="status_display" position="top_center">
+                <label name="status_label" text="상태: 대기 중"/>
+                <progressbar name="main_progress" max="100" value="0"/>
+                <label name="thread_count" text="활성 스레드: 0/500"/>
+            </component>
+        </components>
+    </ui>
+
+    <macro_group name="YouTubeAutomation" max_threads="500">
+        <!-- 1. 지메일 계정 생성 자동화 -->
+        <macro name="Func_1_GmailAccountCreation">
+            <action name="log" params="Starting Gmail account creation"/>
+            <action name="create_browser" browser_type="chrome"/>
+            <action name="navigate" url="https://accounts.google.com/signup"/>
+            <action name="wait_load"/>
+            
+            <!-- 랜덤 이름 생성 -->
+            <action name="random" min="1000" max="9999" variable="random_number"/>
+            <action name="set_variable" name="first_name" value="User${random_number}"/>
+            <action name="set_variable" name="last_name" value="Test"/>
+            <action name="set_variable" name="username" value="hdgrace${random_number}"/>
+            <action name="set_variable" name="password" value="HdGrace!2025${random_number}"/>
+            
+            <!-- 이름 입력 -->
+            <action name="wait_visible" selector="input[name='firstName']"/>
+            <action name="set_value" selector="input[name='firstName']" value="${first_name}"/>
+            <action name="set_value" selector="input[name='lastName']" value="${last_name}"/>
+            <action name="click" selector="button:contains('다음')"/>
+            <action name="wait_seconds" seconds="2"/>
+            
+            <!-- 사용자 이름 및 비밀번호 설정 -->
+            <action name="wait_visible" selector="input[id='username']"/>
+            <action name="set_value" selector="input[id='username']" value="${username}"/>
+            <action name="set_value" selector="input[name='Passwd']" value="${password}"/>
+            <action name="set_value" selector="input[name='ConfirmPasswd']" value="${password}"/>
+            <action name="click" selector="button:contains('다음')"/>
+            <action name="wait_seconds" seconds="3"/>
+            
+            <!-- 생년월일 및 성별 입력 -->
+            <action name="if" condition="document.querySelector('input[name=\"BirthMonth\"]') != null">
+                <action name="set_value" selector="input[name='BirthMonth']" value="4"/>
+                <action name="set_value" selector="input[name='BirthDay']" value="15"/>
+                <action name="set_value" selector="input[name='BirthYear']" value="1990"/>
+                <action name="select_option" selector="select[name='Gender']" value="1"/>
+                <action name="click" selector="button:contains('다음')"/>
+                <action name="wait_seconds" seconds="2"/>
+            </action>
+            
+            <!-- 계정 생성 완료 확인 -->
+            <action name="if" condition="document.querySelector('title').innerText.includes('Gmail') || document.querySelector('title').innerText.includes('Inbox')">
+                <action name="log" params="Gmail account created successfully: ${username}@gmail.com"/>
+                <action name="write_file" path="created_accounts.txt" content="${username}@gmail.com:${password}\n" mode="append"/>
+            </action>
+            <action name="else">
+                <action name="log" params="Gmail account creation failed or requires verification"/>
+            </action>
+            </action>
+        </macro>
+
+        <!-- 2. 계정 복구 이메일/전화번호 설정 -->
+        <macro name="Func_2_AccountRecoverySetup">
+            <action name="log" params="Setting up account recovery options"/>
+            <action name="navigate" url="https://myaccount.google.com/recovery"/>
+            <action name="wait_load"/>
+            
+            <!-- 복구 이메일 설정 -->
+            <action name="if" condition="${recovery_email} != ''">
+                <action name="wait_visible" selector="input[type='email'][name='recoveryId']" timeout="10000"/>
+                <action name="set_value" selector="input[type='email'][name='recoveryId']" value="${recovery_email}"/>
+                <action name="log" params="Recovery email set to ${recovery_email}"/>
+                <action name="click" selector="button:contains('저장')"/>
+                <action name="wait_seconds" seconds="2"/>
+            </action>
+            
+            <!-- 복구 전화번호 설정 -->
+            <action name="if" condition="${recovery_phone} != ''">
+                <action name="wait_visible" selector="input[type='tel'][name='recoveryPhone']" timeout="10000"/>
+                <action name="set_value" selector="input[type='tel'][name='recoveryPhone']" value="${recovery_phone}"/>
+                <action name="log" params="Recovery phone set to ${recovery_phone}"/>
+                <action name="click" selector="button:contains('저장')"/>
+                <action name="wait_seconds" seconds="2"/>
+            </action>
+            
+            <action name="log" params="Account recovery options setup completed"/>
+        </macro>
+
+        <!-- 3. 지메일 보안 설정 자동화 (2차 인증 등) -->
+        <macro name="Func_3_GmailSecuritySetup">
+            <action name="log" params="Starting Gmail security setup"/>
+            <action name="navigate" url="https://myaccount.google.com/security"/>
+            <action name="wait_load"/>
+            
+            <!-- 2단계 인증 설정 -->
+            <action name="if" condition="document.querySelector('text:contains(\"2-Step Verification\")') != null &amp;&amp; ${enable_2fa} == true">
+                <action name="execute_script" script="document.querySelector('text:contains(\"2-Step Verification\")').scrollIntoView();"/>
+                <action name="wait_seconds" seconds="1"/>
+                <action name="click" selector="text:contains(\"2-Step Verification\")"/>
+                <action name="wait_seconds" seconds="2"/>
+                
+                <action name="if" condition="document.querySelector('text:contains(\"Turn on\")') != null">
+                    <action name="click" selector="text:contains(\"Turn on\")"/>
+                    <action name="wait_seconds" seconds="2"/>
+                    <action name="log" params="2-Step Verification enabled"/>
+                </action>
+                </action>
+            </action>
+            
+            <!-- 앱 비밀번호 생성 -->
+            <action name="if" condition="document.querySelector('text:contains(\"App passwords\")') != null &amp;&amp; ${enable_app_passwords} == true">
+                <action name="execute_script" script="document.querySelector('text:contains(\"App passwords\")').scrollIntoView();"/>
+                <action name="wait_seconds" seconds="1"/>
+                <action name="click" selector="text:contains(\"App passwords\")"/>
+                <action name="wait_seconds" seconds="2"/>
+                <action name="click" selector="select[name='selection'] option[value='other']"/>
+                <action name="click" selector="button:contains('생성')"/>
+                <action name="wait_seconds" seconds="3"/>
+                <action name="execute_script" script="var password = document.querySelector('.password').innerText; variables.app_password = password;"/>
+                <action name="log" params="App password generated: ${app_password}"/>
+                <action name="click" selector="button:contains('완료')"/>
+            </action>
+            
+            <action name="log" params="Gmail security setup completed"/>
+        </macro>
+
+        <!-- 4. 지메일 프로필 이미지 / 채널명 설정 -->
+        <macro name="Func_4_GmailProfileUpdate">
+            <action name="log" params="Updating Gmail profile"/>
+            <action name="navigate" url="https://myaccount.google.com/personal-info"/>
+            <action name="wait_load"/>
+            
+            <!-- 프로필 사진 변경 -->
+            <action name="if" condition="${change_profile_picture} == true &amp;&amp; document.querySelector('img[alt=\"프로필 사진\"]') != null">
+                <action name="click" selector="img[alt=\"프로필 사진\"]"/>
+                <action name="wait_seconds" seconds="1"/>
+                <action name="upload_file" selector="input[type='file']" path="${profile_image_path}"/>
+                <action name="wait_seconds" seconds="3"/>
+                <action name="click" selector="button:contains('저장')"/>
+                <action name="wait_seconds" seconds="2"/>
+                <action name="log" params="Profile picture updated"/>
+            </action>
+            
+            <!-- 이름 변경 -->
+            <action name="if" condition="${change_name} == true">
+                <action name="wait_visible" selector="input[name='firstName']"/>
+                <action name="set_value" selector="input[name='firstName']" value="${new_first_name}"/>
+                <action name="set_value" selector="input[name='lastName']" value="${new_last_name}"/>
+                <action name="log" params="Name updated to ${new_first_name} ${new_last_name}"/>
+                <action name="click" selector="button:contains('저장')"/>
+                <action name="wait_seconds" seconds="2"/>
+            </action>
+            
+            <!-- 유튜브 채널명 변경 -->
+            <action name="if" condition="${change_channel_name} == true">
+                <action name="navigate" url="https://studio.youtube.com/"/>
+                <action name="wait_load"/>
+                <action name="wait_visible" selector="ytcp-button[aria-label='이름 변경']"/>
+                <action name="click" selector="ytcp-button[aria-label='이름 변경']"/>
+                <action name="wait_seconds" seconds="1"/>
+                <action name="set_value" selector="input[name='channel-name']" value="${new_channel_name}"/>
+                <action name="click" selector="tp-yt-paper-button:contains('게시')"/>
+                <action name="wait_seconds" seconds="2"/>
+                <action name="log" params="YouTube channel name updated to ${new_channel_name}"/>
+            </action>
+            
+            <action name="log" params="Gmail profile update completed"/>
+        </macro>
+
+        <!-- 5. 유튜브 채널 자동 생성 -->
+        <macro name="Func_5_YouTubeChannelCreation">
+            <action name="log" params="Starting YouTube channel creation"/>
+            <action name="navigate" url="https://studio.youtube.com/"/>
+            <action name="wait_load"/>
+            
+            <action name="if" condition="document.querySelector('text:contains(\"채널 만들기\")') != null">
+                <action name="click" selector="text:contains(\"채널 만들기\")"/>
+                <action name="wait_seconds" seconds="2"/>
+                
+                <action name="if" condition="document.querySelector('input[name=\"channel-name\"]') != null">
+                    <action name="set_value" selector="input[name=\"channel-name\"]" value="${channel_name}"/>
+                    <action name="log" params="Channel name set to ${channel_name}"/>
+                    <action name="click" selector="tp-yt-paper-button:contains('만들기')"/>
+                    <action name="wait_seconds" seconds="3"/>
+                    <action name="log" params="YouTube channel created: ${channel_name}"/>
+                </action>
+                </action>
+            </action>
+            <action name="else">
+                <action name="log" params="YouTube channel already exists"/>
+            </action>
+            </action>
+        </macro>
+
+        <!-- 6. 유튜브 채널 설명 / 태그 자동 삽입 -->
+        <macro name="Func_6_ChannelDescriptionTags">
+            <action name="log" params="Updating channel description and tags"/>
+            <action name="navigate" url="https://studio.youtube.com/channel/UC/settings/profile"/>
+            <action name="wait_load"/>
+            
+            <!-- 채널 설명 -->
+            <action name="if" condition="${channel_description} != ''">
+                <action name="wait_visible" selector="textarea[name='description']"/>
+                <action name="set_value" selector="textarea[name='description']" value="${channel_description}"/>
+                <action name="log" params="Channel description updated"/>
+            </action>
+            
+            <!-- 태그 -->
+            <action name="if" condition="${channel_tags} != ''">
+                <action name="set_value" selector="input[name='tags']" value="${channel_tags}"/>
+                <action name="log" params="Channel tags updated: ${channel_tags}"/>
+            </action>
+            
+            <!-- 카테고리 -->
+            <action name="if" condition="${channel_category} != ''">
+                <action name="select_option" selector="select[name='category']" value="${channel_category}"/>
+                <action name="log" params="Channel category set to ${channel_category}"/>
+            </action>
+            
+            <action name="click" selector="tp-yt-paper-button:contains('게시')"/>
+            <action name="wait_seconds" seconds="3"/>
+            <action name="log" params="Channel profile updated"/>
+        </macro>
+
+        <!-- 7. Shorts 영상 자동 재생 -->
+        <macro name="Func_7_ShortsAutoPlay">
+            <action name="log" params="Starting Shorts auto-play"/>
+            <action name="navigate" url="https://www.youtube.com/shorts"/>
+            <action name="wait_load"/>
+            <action name="wait_visible" selector="ytd-reel-video-renderer"/>
+            
+            <action name="for" variable="i" from="0" to="${shorts_count}">
+                <action name="execute_script" script="document.querySelector('ytd-reel-video-renderer').scrollIntoView();"/>
+                <action name="wait_seconds" seconds="1"/>
+                <action name="click" selector="ytd-reel-video-renderer tp-yt-paper-icon-button[title='재생']"/>
+                <action name="wait_seconds" seconds="${shorts_duration}"/>
+                <action name="execute_script" script="document.querySelector('html').dispatchKeyboardEvent('keydown', {keyCode: 40});"/>
+                <action name="wait_seconds" seconds="1"/>
+            </action>
+            <action name="log" params="Shorts auto-play completed for ${shorts_count} videos"/>
+        </macro>
+
+        <!-- 8. 일반 영상 자동 시청 -->
+        <macro name="Func_8_VideoAutoView">
+            <action name="log" params="Starting video auto-view"/>
+            <action name="foreach" variable="video_url" in="${video_url_list}">
+                <action name="navigate" url="${video_url}"/>
+                <action name="wait_load"/>
+                <action name="wait_visible" selector="video"/>
+                <action name="wait_seconds" seconds="${view_duration}"/>
+                <action name="execute_script" script="if(document.querySelector('video')) document.querySelector('video').pause();"/>
+                <action name="go_back"/>
+                <action name="wait_seconds" seconds="2"/>
+            </action>
+            <action name="log" params="Video auto-view completed"/>
+        </macro>
+
+        <!-- 9. 좋아요 클릭 자동화 -->
+        <macro name="Func_9_LikeAutomation">
+            <action name="log" params="Starting like automation"/>
+            <action name="foreach" variable="video_url" in="${like_video_list}">
+                <action name="navigate" url="${video_url}"/>
+                <action name="wait_load"/>
+                <action name="wait_visible" selector="ytd-like-button-renderer"/>
+                
+                <action name="if" condition="!document.querySelector('ytd-like-button-renderer').classList.contains('style-default-active')">
+                    <action name="click" selector="ytd-like-button-renderer"/>
+                    <action name="wait_seconds" seconds="2"/>
+                    <action name="log" params="Liked video: ${video_url}"/>
+                </action>
+                <action name="else">
+                    <action name="log" params="Video already liked: ${video_url}"/>
+                </action>
+                </action>
+                
+                <action name="go_back"/>
+                <action name="wait_seconds" seconds="1"/>
+            </action>
+            <action name="log" params="Like automation completed"/>
+        </macro>
+
+        <!-- 10. 댓글 자동 작성 -->
+        <macro name="Func_10_CommentAutomation">
+            <action name="log" params="Starting comment automation"/>
+            <action name="foreach" variable="video_url" in="${comment_video_list}">
+                <action name="navigate" url="${video_url}"/>
+                <action name="wait_load"/>
+                <action name="wait_visible" selector="ytd-comment-box"/>
+                
+                <action name="set_value" selector="ytd-comment-box #content-textbox" value="${comment_text}"/>
+                <action name="click" selector="ytd-comment-box #submit-button"/>
+                <action name="wait_seconds" seconds="${comment_delay}"/>
+                <action name="log" params="Comment posted on: ${video_url}"/>
+            </action>
+            <action name="log" params="Comment automation completed"/>
+        </macro>
+
+        <!-- 11. 구독 자동화 -->
+        <macro name="Func_11_SubscribeAutomation">
+            <action name="log" params="Starting subscribe automation"/>
+            <action name="foreach" variable="channel_url" in="${subscribe_channel_list}">
+                <action name="navigate" url="${channel_url}"/>
+                <action name="wait_load"/>
+                <action name="wait_visible" selector="ytd-subscribe-button-renderer"/>
+                
+                <action name="if" condition="document.querySelector('ytd-subscribe-button-renderer').getAttribute('subscribed') == null">
+                    <action name="click" selector="ytd-subscribe-button-renderer"/>
+                    <action name="wait_seconds" seconds="3"/>
+                    <action name="log" params="Subscribed to: ${channel_url}"/>
+                </action>
+                <action name="else">
+                    <action name="log" params="Already subscribed to: ${channel_url}"/>
+                </action>
+                </action>
+            </action>
+            <action name="log" params="Subscribe automation completed"/>
+        </macro>
+
+        <!-- 12. 해시태그 기반 검색 및 유입 시청 -->
+        <macro name="Func_12_HashtagSearchView">
+            <action name="log" params="Starting hashtag search and view"/>
+            <action name="foreach" variable="hashtag" in="${hashtag_list}">
+                <action name="navigate" url="https://www.youtube.com/results?search_query=${hashtag}"/>
+                <action name="wait_load"/>
+                <action name="wait_visible" selector="ytd-video-renderer"/>
+                
+                <action name="for" variable="i" from="0" to="${videos_to_watch}">
+                    <action name="if" condition="document.querySelectorAll('ytd-video-renderer').length > ${i}">
+                        <action name="click" selector="ytd-video-renderer:nth-child(${i+1}) a#thumbnail"/>
+                        <action name="wait_seconds" seconds="${hashtag_view_duration}"/>
+                        <action name="go_back"/>
+                        <action name="wait_seconds" seconds="2"/>
+                    </action>
+                </action>
+            </action>
+            <action name="log" params="Hashtag search and view completed"/>
+        </macro>
+
+        <!-- 13. 영상 반복 재생 알고리즘 -->
+        <macro name="Func_13_RepeatPlaybackAlgorithm">
+            <action name="log" params="Starting repeat playback algorithm"/>
+            <action name="set_variable" name="total_views" value="0"/>
+            
+            <action name="for" variable="cycle" from="1" to="${view_cycles}">
+                <action name="foreach" variable="video_url" in="${repeat_video_list}">
+                    <action name="create_browser" browser_type="chrome" private="true" variable="viewer_browser"/>
+                    <action name="execute_in_browser" browser="${viewer_browser}" actions="
+                        navigate('${video_url}');
+                        wait_load();
+                        wait_seconds(${random(60,180)});
+                        close();
+                    "/>
+                    <action name="math" expression="${total_views} + 1" variable="total_views"/>
+                    <action name="call_function" name="get_random_delay" params="5,30" variable="delay"/>
+                    <action name="wait_seconds" seconds="${delay}"/>
+                </action>
+            </action>
+            <action name="log" params="Repeat playback algorithm completed. Total views: ${total_views}"/>
+        </macro>
+
+        <!-- 14. 유튜브 라이브 자동 접속 유지 -->
+        <macro name="Func_14_LiveAutoConnect">
+            <action name="log" params="Starting live auto-connect"/>
+            <action name="foreach" variable="live_url" in="${live_stream_list}">
+                <action name="create_browser" browser_type="chrome" variable="live_browser"/>
+                <action name="execute_in_browser" browser="${live_browser}" actions="
+                    navigate('${live_url}');
+                    wait_load();
+                    wait_visible('video');
+                    while(variables.bot_running &amp;&amp; !variables.bot_paused) {
+                        wait_seconds(60);
+                    }
+                    close();
+                "/>
+                <action name="wait_seconds" seconds="${live_stay_duration}"/>
+            </action>
+            <action name="log" params="Live auto-connect completed"/>
+        </macro>
+
+        <!-- 15. 다국어 설정 및 국가번호 자동 선택 -->
+        <macro name="Func_15_MultilingualSetup">
+            <action name="log" params="Setting up multilingual configuration"/>
+            <action name="set_variable" name="language_code" value="${language_setting}"/>
+            <action name="set_variable" name="country_code" value="${country_setting}"/>
+            
+            <!-- 브라우저 언어 설정 -->
+            <action name="set_user_agent_language" language="${language_code}"/>
+            
+            <!-- YouTube 언어 설정 -->
+            <action name="navigate" url="https://www.youtube.com/"/>
+            <action name="wait_load"/>
+            <action name="if" condition="document.querySelector('ytd-pivot-bar-item-renderer:contains(\"크리에이터 스튜디오\")') == null">
+                <action name="click" selector="ytd-topbar-menu-button:contains('YouTube')"/>
+                <action name="wait_seconds" seconds="1"/>
+                <action name="click" selector="ytd-compact-link-renderer:contains('한국어')"/>
+                <action name="wait_seconds" seconds="2"/>
+            </action>
+            
+            <!-- 위치 설정 -->
+            <action name="navigate" url="https://www.youtube.com/"/>
+            <action name="wait_load"/>
+            <action name="execute_script" script="navigator.geolocation.getCurrentPosition = function(success) { success({coords: {latitude: 37.5665, longitude: 126.9780}}); };"/>
+            <action name="log" params="Multilingual setup completed: ${language_code}, ${country_code}"/>
+        </macro>
+
+        <!-- 16. 회전 프록시 자동 적용 -->
+        <macro name="Func_16_RotatingProxy">
+            <action name="log" params="Setting up rotating proxy"/>
+            <action name="if" condition="${proxy_type} == 'random_kr_proxy'">
+                <action name="http_client" url="https://api.proxylist.com/get_kr_proxy" method="GET" variable="proxy_response"/>
+                <action name="parse_json" json="${proxy_response}" variable="proxy_data"/>
+                <action name="set_proxy" enabled="true" host="${proxy_data.host}" port="${proxy_data.port}" username="${proxy_data.username}" password="${proxy_data.password}"/>
+                <action name="log" params="Random KR proxy set: ${proxy_data.host}:${proxy_data.port}"/>
+            </action>
+            <action name="else_if" condition="${proxy_type} == 'pyproxy'">
+                <action name="http_client" url="https://pyproxy.com/api/get_proxy" method="GET" variable="proxy_response"/>
+                <action name="parse_json" json="${proxy_response}" variable="proxy_data"/>
+                <action name="set_proxy" enabled="true" host="${proxy_data.ip}" port="${proxy_data.port}" username="${proxy_data.user}" password="${proxy_data.pass}"/>
+                <action name="log" params="PyProxy set: ${proxy_data.ip}:${proxy_data.port}"/>
+            </action>
+            <action name="else">
+                <action name="split" text="${proxy_list}" separator="," variable="proxies"/>
+                <action name="random" min="0" max="${proxies.length-1}" variable="selected_proxy_index"/>
+                <action name="split" text="${proxies[selected_proxy_index]}" separator=":" variable="proxy_parts"/>
+                <action name="set_proxy" enabled="true" host="${proxy_parts[0]}" port="${proxy_parts[1]}" username="${proxy_parts[2]}" password="${proxy_parts[3]}"/>
+                <action name="log" params="Manual proxy set: ${proxy_parts[0]}:${proxy_parts[1]}"/>
+            </action>
+            </action>
+        </macro>
+
+        <!-- 17. 브라우저 지문 무작위화 -->
+        <macro name="Func_17_BrowserFingerprintRandomization">
+            <action name="log" params="Randomizing browser fingerprint"/>
+            
+            <!-- FingerprintSwitcher API 사용 -->
+            <action name="if" condition="${fingerprint_api_key} != ''">
+                <action name="http_client" url="https://fp.bablosoft.com/api/get" method="GET" variable="fingerprint_response">
+                    <header name="Authorization" value="${fingerprint_api_key}"/>
+                </action>
+                <action name="parse_json" json="${fingerprint_response}" variable="fingerprint_data"/>
+                <action name="set_fingerprint" data="${fingerprint_data}"/>
+                <action name="log" params="Browser fingerprint randomized using FingerprintSwitcher"/>
+            </action>
+            <action name="else">
+                <!-- 기본 브라우저 지문 변경 -->
+                <action name="random" min="1" max="3" variable="browser_choice"/>
+                <action name="if" condition="${browser_choice} == 1">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"/>
+                    <action name="set_resolution" width="1920" height="1080"/>
+                </action>
+                <action name="else_if" condition="${browser_choice} == 2">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15"/>
+                    <action name="set_resolution" width="375" height="667"/>
+                </action>
+                <action name="else">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (Linux; Android 10; Pixel 3) AppleWebKit/537.36"/>
+                    <action name="set_resolution" width="1080" height="1920"/>
+                </action>
+                </action>
+            </action>
+            </action>
+            <action name="log" params="Browser fingerprint randomization completed"/>
+        </macro>
+
+        <!-- 18. 쿠키 저장 / 불러오기 자동화 -->
+        <macro name="Func_18_CookieAutomation">
+            <action name="log" params="Starting cookie automation"/>
+            
+            <!-- 쿠키 저장 -->
+            <action name="if" condition="${save_cookies} == true">
+                <action name="get_cookies" variable="current_cookies"/>
+                <action name="write_file" path="cookies/${account_name}.json" content="${current_cookies}"/>
+                <action name="log" params="Cookies saved for ${account_name}"/>
+            </action>
+            
+            <!-- 쿠키 불러오기 -->
+            <action name="if" condition="${load_cookies} == true">
+                <action name="read_file" path="cookies/${account_name}.json" variable="saved_cookies"/>
+                <action name="if" condition="${saved_cookies} != ''">
+                    <action name="set_cookies" cookies="${saved_cookies}"/>
+                    <action name="log" params="Cookies loaded for ${account_name}"/>
+                </action>
+                </action>
+            </action>
+        </macro>
+
+        <!-- 19. UA (User-Agent) 관리 및 백업 -->
+        <macro name="Func_19_UAManagement">
+            <action name="log" params="Managing User-Agent"/>
+            
+            <!-- UA 백업 -->
+            <action name="if" condition="${backup_ua} == true">
+                <action name="get_user_agent" variable="current_ua"/>
+                <action name="write_file" path="ua/${account_name}.txt" content="${current_ua}" mode="append"/>
+                <action name="log" params="User-Agent backed up: ${current_ua}"/>
+            </action>
+            
+            <!-- UA 변경 -->
+            <action name="if" condition="${change_ua} == true">
+                <action name="set_user_agent" user_agent="${new_user_agent}"/>
+                <action name="log" params="User-Agent changed to: ${new_user_agent}"/>
+            </action>
+            
+            <!-- UA 랜덤화 -->
+            <action name="if" condition="${randomize_ua} == true">
+                <action name="random" min="1" max="10" variable="ua_choice"/>
+                <action name="if" condition="${ua_choice} == 1">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"/>
+                </action>
+                <action name="else_if" condition="${ua_choice} == 2">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"/>
+                </action>
+                <action name="else_if" condition="${ua_choice} == 3">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"/>
+                </action>
+                <action name="else_if" condition="${ua_choice} == 4">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15"/>
+                </action>
+                <action name="else_if" condition="${ua_choice} == 5">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (iPad; CPU OS 14_0 like Mac OS X) AppleWebKit/605.1.15"/>
+                </action>
+                <action name="else_if" condition="${ua_choice} == 6">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (Linux; Android 10; Pixel 3) AppleWebKit/537.36"/>
+                </action>
+                <action name="else_if" condition="${ua_choice} == 7">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (Linux; Android 11; Pixel 4) AppleWebKit/537.36"/>
+                </action>
+                <action name="else_if" condition="${ua_choice} == 8">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"/>
+                </action>
+                <action name="else_if" condition="${ua_choice} == 9">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15"/>
+                </action>
+                <action name="else">
+                    <action name="set_user_agent" user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"/>
+                </action>
+                </action>
+            </action>
+            </action>
+            <action name="log" params="User-Agent management completed"/>
+        </macro>
+
+        <!-- 20. 자동/수동 실행 스위치 UI 제어 -->
+        <macro name="Func_20_AutoManualSwitch">
+            <action name="log" params="Setting up auto/manual switch control"/>
+            <action name="create_button" text="자동 실행" position="top_left" color="green" onclick="
+                set_variable('execution_mode', 'auto');
+                log('Execution mode set to AUTO');
+            "/>
+            <action name="create_button" text="수동 실행" position="top_left" color="blue" onclick="
+                set_variable('execution_mode', 'manual');
+                log('Execution mode set to MANUAL');
+            "/>
+            <action name="create_button" text="스케줄러 설정" position="top_left" color="purple" onclick="
+                input_dialog('스케줄러 설정', '시작 시간:', '09:00', 'end_hour', '종료 시간:', '18:00');
+                log('Scheduler configured');
+            "/>
+            <action name="log" params="Auto/manual switch UI created"/>
+        </macro>
+
+        <!-- 21. 구독자 증가: 수동 및 자동 제어 옵션 -->
+        <macro name="Func_21_SubscriberIncrease">
+            <action name="log" params="Starting subscriber increase"/>
+            <action name="set_variable" name="total_subscribers" value="0"/>
+            
+            <action name="for" variable="i" from="1" to="${subscriber_count}">
+                <action name="create_browser" browser_type="chrome" private="true" variable="subscriber_browser"/>
+                <action name="execute_in_browser" browser="${subscriber_browser}" actions="
+                    navigate('${target_channel_url}');
+                    wait_load();
+                    wait_visible('ytd-subscribe-button-renderer');
+                    click('ytd-subscribe-button-renderer');
+                    wait_seconds(5);
+                    close();
+                "/>
+                <action name="math" expression="${total_subscribers} + 1" variable="total_subscribers"/>
+                <action name="call_function" name="get_random_delay" params="30,300" variable="delay"/>
+                <action name="wait_seconds" seconds="${delay}"/>
+            </action>
+            <action name="log" params="Subscriber increase completed. Total subscribers: ${total_subscribers}"/>
+        </macro>
+
+        <!-- 22. SMS 인증 처리 자동화 (sms-activate, vak-sms 등) -->
+        <macro name="Func_22_SMSVerification">
+            <action name="log" params="Starting SMS verification automation"/>
+            <action name="if" condition="${sms_api_key} != ''">
+                <!-- sms-activate.org API 사용 -->
+                <action name="http_client" url="https://sms-activate.org/stubs/handler_api.php?api_key=${sms_api_key}&amp;action=getNumber&amp;service=go&amp;country=0" method="GET" variable="phone_response"/>
+                <action name="split" text="${phone_response}" separator=":" variable="phone_data"/>
+                <action name="set_variable" name="activation_id" value="${phone_data[1]}"/>
+                <action name="set_variable" name="phone_number" value="${phone_data[2]}"/>
+                <action name="log" params="Phone number received: ${phone_number}"/>
+                
+                <!-- 폰 번호 입력 -->
+                <action name="set_value" selector="input[type='tel']" value="${phone_number}"/>
+                <action name="click" selector="button:contains('다음')"/>
+                <action name="wait_seconds" seconds="10"/>
+                
+                <!-- SMS 코드 확인 -->
+                <action name="for" variable="attempt" from="1" to="10">
+                    <action name="http_client" url="https://sms-activate.org/stubs/handler_api.php?api_key=${sms_api_key}&amp;action=getStatus&amp;id=${activation_id}" method="GET" variable="sms_status"/>
+                    <action name="if" condition="!${sms_status}.startsWith('STATUS_WAIT_CODE')">
+                        <action name="replace" text="${sms_status}" search="STATUS_OK:" replace="" variable="sms_code"/>
+                        <action name="set_value" selector="input[type='text']" value="${sms_code}"/>
+                        <action name="click" selector="button:contains('확인')"/>
+                        <action name="log" params="SMS verification completed with code: ${sms_code}"/>
+                        <action name="break"/>
+                    </action>
+                    <action name="wait_seconds" seconds="30"/>
+                </action>
+                </action>
+            </action>
+            <action name="else">
+                <action name="log" params="SMS API key not provided, skipping SMS verification"/>
+            </action>
+            </action>
+        </macro>
+
+        <!-- 23. 유튜브 댓글/구독/시청 순환 알고리즘 -->
+        <macro name="Func_23_CyclingAlgorithm">
+            <action name="log" params="Starting cycling algorithm"/>
+            <action name="set_variable" name="cycle_count" value="0"/>
+            
+            <action name="while" condition="${cycle_count} < ${total_cycles} &amp;&amp; ${bot_running} == true">
+                <action name="if" condition="${bot_paused} == false">
+                    <!-- 랜덤 작업 선택 -->
+                    <action name="random" min="1" max="3" variable="task_choice"/>
+                    
+                    <action name="if" condition="${task_choice} == 1">
+                        <action name="call_macro" macro="Func_8_VideoAutoView"/>
+                        <action name="log" params="Completed video viewing cycle ${cycle_count}"/>
+                    </action>
+                    <action name="else_if" condition="${task_choice} == 2">
+                        <action name="call_macro" macro="Func_10_CommentAutomation"/>
+                        <action name="log" params="Completed comment cycle ${cycle_count}"/>
+                    </action>
+                    <action name="else">
+                        <action name="call_macro" macro="Func_11_SubscribeAutomation"/>
+                        <action name="log" params="Completed subscribe cycle ${cycle_count}"/>
+                    </action>
+                    </action>
+                    
+                    <action name="math" expression="${cycle_count} + 1" variable="cycle_count"/>
+                    <action name="call_function" name="get_random_delay" params="60,300" variable="delay"/>
+                    <action name="wait_seconds" seconds="${delay}"/>
+                </action>
+                <action name="else">
+                    <action name="wait_seconds" seconds="10"/>
+                </action>
+                </action>
+            </action>
+            <action name="log" params="Cycling algorithm completed after ${cycle_count} cycles"/>
+        </macro>
+
+        <!-- 24. 지메일 로그인 로직 완성 (아이디/패스워드/Next) -->
+        <macro name="Func_24_GmailLogin">
+            <action name="log" params="Starting Gmail login process"/>
+            <action name="create_browser" browser_type="chrome"/>
+            <action name="navigate" url="https://accounts.google.com/"/>
+            <action name="wait_load"/>
+            
+            <!-- 아이디 입력 단계 -->
+            <action name="wait_visible" selector="input[type='email']"/>
+            <action name="set_value" selector="input[type='email']" value="${gmail_username}"/>
+            <action name="log" params="Gmail username entered"/>
+            <action name="click" selector="div#identifierNext"/>
+            <action name="wait_seconds" seconds="2"/>
+            
+            <!-- 비밀번호 입력 단계 -->
+            <action name="wait_visible" selector="input[type='password']" timeout="10000"/>
+            <action name="set_value" selector="input[type='password']" value="${gmail_password}"/>
+            <action name="log" params="Gmail password entered"/>
+            <action name="click" selector="div#passwordNext"/>
+            <action name="wait_seconds" seconds="3"/>
+            
+            <!-- 로그인 성공 확인 -->
+            <action name="if" condition="document.querySelector('title').innerText.includes('Inbox') || document.querySelector('title').innerText.includes('Gmail')">
+                <action name="log" params="Gmail login successful"/>
+                <action name="set_variable" name="login_success" value="true"/>
+            </action>
+            <action name="else">
+                <action name="if" condition="document.querySelector('div[aria-live=\"assertive\"]') != null">
+                    <action name="log" params="Gmail login failed: Invalid credentials"/>
+                    <action name="set_variable" name="login_success" value="false"/>
+                </action>
+                <action name="else">
+                    <action name="log" params="Gmail login status: Waiting for verification"/>
+                    <action name="set_variable" name="login_success" value="pending"/>
+                </action>
+                </action>
+            </action>
+            </action>
+        </macro>
+
+        <!-- 25. 지메일 복구/보안설정 강화 (보안페이지 접근 + 저장) -->
+        <macro name="Func_25_GmailSecurity">
+            <action name="log" params="Starting Gmail security settings enhancement"/>
+            
+            <!-- 보안 페이지로 이동 -->
+            <action name="navigate" url="https://myaccount.google.com/security"/>
+            <action name="wait_load"/>
+            <action name="wait_visible" selector="h1" timeout="15000"/>
+            
+            <!-- 2단계 인증 확인 및 설정 -->
+            <action name="if" condition="document.querySelector('text:contains(\"2-Step Verification\")') != null">
+                <action name="execute_script" script="document.querySelector('text:contains(\"2-Step Verification\")').scrollIntoView();"/>
+                <action name="wait_seconds" seconds="1"/>
+                <action name="click" selector="text:contains(\"2-Step Verification\")"/>
+                <action name="wait_seconds" seconds="2"/>
+                
+                <action name="if" condition="document.querySelector('text:contains(\"Turn on\")') != null">
+                    <action name="click" selector="text:contains(\"Turn on\")"/>
+                    <action name="wait_seconds" seconds="2"/>
+                    <action name="log" params="2-Step Verification enabled"/>
+                </action>
+                </action>
+            </action>
+            
+            <!-- 복구 이메일 설정 -->
+            <action name="navigate" url="https://myaccount.google.com/signinoptions/recovery-email"/>
+            <action name="wait_seconds" seconds="3"/>
+            <action name="if" condition="${recovery_email} != ''">
+                <action name="wait_visible" selector="input[type='email']"/>
+                <action name="set_value" selector="input[type='email']" value="${recovery_email}"/>
+                <action name="log" params="Recovery email set to ${recovery_email}"/>
+                <action name="click" selector="button:contains('저장')"/>
+                <action name="wait_seconds" seconds="2"/>
+            </action>
+            
+            <!-- 복구 전화번호 설정 -->
+            <action name="navigate" url="https://myaccount.google.com/signinoptions/recovery-phone"/>
+            <action name="wait_seconds" seconds="3"/>
+            <action name="if" condition="${recovery_phone} != ''">
+                <action name="wait_visible" selector="input[type='tel']"/>
+                <action name="set_value" selector="input[type='tel']" value="${recovery_phone}"/>
+                <action name="log" params="Recovery phone set to ${recovery_phone}"/>
+                <action name="click" selector="button:contains('저장')"/>
+                <action name="wait_seconds" seconds="2"/>
+            </action>
+            
+            <!-- 보안 설정 완료 로그 -->
+            <action name="log" params="Gmail security settings enhanced successfully"/>
+        </macro>
+
+        <!-- 26. 유튜브 조회수 알고리즘 고도화 (딥링크 반복시청 + 리프레시) -->
+        <macro name="Func_26_ViewAlgorithmAdvanced">
+            <action name="log" params="Starting advanced view count algorithm"/>
+            <action name="set_variable" name="total_views" value="0"/>
+            
+            <!-- 딥링크 생성 및 반복 시청 -->
+            <action name="foreach" variable="video_url" in="${video_url_list}">
+                <action name="log" params="Processing video: ${video_url}"/>
+                <action name="set_variable" name="view_count" value="0"/>
+                
+                <action name="for" variable="i" from="1" to="${view_cycles}">
+                    <!-- 랜덤 딥링크 생성 -->
+                    <action name="random" min="1000" max="9999" variable="random_param"/>
+                    <action name="set_variable" name="deep_link" value="${video_url}&amp;feature=shared_deep_link&amp;v=${random_param}"/>
+                    
+                    <!-- 브라우저 생성 및 시청 -->
+                    <action name="create_browser" browser_type="chrome" private="true" variable="viewer_browser"/>
+                    <action name="execute_in_browser" browser="${viewer_browser}" actions="
+                        navigate('${deep_link}');
+                        wait_load();
+                        wait_seconds(${random_view_time});
+                        execute_script('if(document.querySelector(\u0027video\u0027)) document.querySelector(\u0027video\u0027).pause();');
+                        wait_seconds(1);
+                        refresh();
+                        wait_seconds(${random_view_time});
+                        close();
+                    "/>
+                    
+                    <!-- 시청 카운트 증가 -->
+                    <action name="math" expression="${view_count} + 1" variable="view_count"/>
+                    <action name="log" params="View count for this video: ${view_count}"/>
+                    
+                    <!-- 랜덤 대기 -->
+                    <action name="call_function" name="get_random_delay" params="5,30" variable="delay"/>
+                    <action name="wait_seconds" seconds="${delay}"/>
+                </action>
+                
+                <!-- 총 시청 수 업데이트 -->
+                <action name="math" expression="${total_views} + ${view_count}" variable="total_views"/>
+            </action>
+            
+            <action name="log" params="Advanced view algorithm completed. Total views: ${total_views}"/>
+        </macro>
+
+        <!-- 27. /*Dat: 주석 자동 삽입 기능 (모듈 구분) -->
+        <macro name="Func_27_CommentAutoInsert">
+            <action name="log" params="Starting comment auto-insertion process"/>
+            
+            <!-- 프로젝트 파일 읽기 -->
+            <action name="read_file" path="${project_file_path}" variable="project_content"/>
+            
+            <!-- 모듈 구분을 위한 주석 추가 -->
+            <action name="replace" text="${project_content}" search="<macro name=&quot;Func_1" replace="/*Dat: 지메일 계정 생성 모듈 */\n<macro name=&quot;Func_1" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_2" replace="/*Dat: 계정 복구 설정 모듈 */\n<macro name=&quot;Func_2" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_3" replace="/*Dat: 지메일 보안 설정 모듈 */\n<macro name=&quot;Func_3" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_4" replace="/*Dat: 지메일 프로필 설정 모듈 */\n<macro name=&quot;Func_4" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_5" replace="/*Dat: 유튜브 채널 생성 모듈 */\n<macro name=&quot;Func_5" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_6" replace="/*Dat: 채널 설명/태그 설정 모듈 */\n<macro name=&quot;Func_6" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_7" replace="/*Dat: Shorts 자동 재생 모듈 */\n<macro name=&quot;Func_7" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_8" replace="/*Dat: 일반 영상 시청 모듈 */\n<macro name=&quot;Func_8" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_9" replace="/*Dat: 좋아요 자동화 모듈 */\n<macro name=&quot;Func_9" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_10" replace="/*Dat: 댓글 자동화 모듈 */\n<macro name=&quot;Func_10" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_11" replace="/*Dat: 구독 자동화 모듈 */\n<macro name=&quot;Func_11" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_12" replace="/*Dat: 해시태그 검색 모듈 */\n<macro name=&quot;Func_12" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_13" replace="/*Dat: 반복 재생 알고리즘 모듈 */\n<macro name=&quot;Func_13" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_14" replace="/*Dat: 라이브 자동 접속 모듈 */\n<macro name=&quot;Func_14" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_15" replace="/*Dat: 다국어 설정 모듈 */\n<macro name=&quot;Func_15" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_16" replace="/*Dat: 회전 프록시 모듈 */\n<macro name=&quot;Func_16" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_17" replace="/*Dat: 브라우저 지문 모듈 */\n<macro name=&quot;Func_17" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_18" replace="/*Dat: 쿠키 자동화 모듈 */\n<macro name=&quot;Func_18" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_19" replace="/*Dat: UA 관리 모듈 */\n<macro name=&quot;Func_19" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_20" replace="/*Dat: 실행 스위치 모듈 */\n<macro name=&quot;Func_20" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_21" replace="/*Dat: 구독자 증가 모듈 */\n<macro name=&quot;Func_21" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_22" replace="/*Dat: SMS 인증 모듈 */\n<macro name=&quot;Func_22" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_23" replace="/*Dat: 순환 알고리즘 모듈 */\n<macro name=&quot;Func_23" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_24" replace="/*Dat: 지메일 로그인 모듈 */\n<macro name=&quot;Func_24" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_25" replace="/*Dat: 지메일 보안 강화 모듈 */\n<macro name=&quot;Func_25" variable="content_with_comments"/>
+            <action name="replace" text="${content_with_comments}" search="<macro name=&quot;Func_26" replace="/*Dat: 조회수 알고리즘 고도화 모듈 */\n<macro name=&quot;Func_26" variable="content_with_comments"/>
+            
+            <!-- 수정된 내용 파일에 저장 -->
+            <action name="write_file" path="${project_file_path}" content="${content_with_comments}"/>
+            <action name="log" params="Comments automatically inserted into the project file"/>
+        </macro>
+
+        <!-- 28. 전체 자동화 루틴 직렬 실행 (<macro name="start">) -->
+        <macro name="start">
+            <action name="log" params="Starting full automation routine"/>
+            <action name="set_variable" name="automation_start_time" value="${current_date} ${current_time}"/>
+            <action name="set_variable" name="bot_running" value="true"/>
+            <action name="set_variable" name="bot_paused" value="false"/>
+            
+            <!-- UI 컨트롤 초기화 -->
+            <action name="call_macro" macro="Func_20_AutoManualSwitch"/>
+            
+            <!-- 사용자 입력 기반 분기 -->
+            <action name="input_dialog" message="실행 모드 선택:" choices="자동,수동,스케줄러" variable="execution_mode"/>
+            <action name="log" params="Execution mode: ${execution_mode}"/>
+            
+            <!-- 모듈 설정 로드 -->
+            <action name="read_file" path="modules_config.txt" variable="config_content"/>
+            <action name="parse_json" json="${config_content}" variable="modules_config"/>
+            
+            <!-- 계정 및 프록시 체크 -->
+            <action name="call_macro" macro="Func_16_RotatingProxy"/>
+            <action name="call_macro" macro="Func_17_BrowserFingerprintRandomization"/>
+            
+            <!-- 메인 작업 실행 -->
+            <action name="if" condition="${execution_mode} == '자동' || ${execution_mode} == '스케줄러'">
+                <!-- 지메일 계정 작업 -->
+                <action name="if" condition="${modules_config.Func_1_GmailAccountCreation_enabled} == true">
+                    <action name="call_macro" macro="Func_1_GmailAccountCreation"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_2_AccountRecoverySetup_enabled} == true">
+                    <action name="call_macro" macro="Func_2_AccountRecoverySetup"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_3_GmailSecuritySetup_enabled} == true">
+                    <action name="call_macro" macro="Func_3_GmailSecuritySetup"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_4_GmailProfileUpdate_enabled} == true">
+                    <action name="call_macro" macro="Func_4_GmailProfileUpdate"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_24_GmailLogin_enabled} == true">
+                    <action name="call_macro" macro="Func_24_GmailLogin"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_25_GmailSecurity_enabled} == true">
+                    <action name="call_macro" macro="Func_25_GmailSecurity"/>
+                </action>
+                
+                <!-- 유튜브 채널 작업 -->
+                <action name="if" condition="${modules_config.Func_5_YouTubeChannelCreation_enabled} == true">
+                    <action name="call_macro" macro="Func_5_YouTubeChannelCreation"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_6_ChannelDescriptionTags_enabled} == true">
+                    <action name="call_macro" macro="Func_6_ChannelDescriptionTags"/>
+                </action>
+                
+                <!-- 시청 및 상호작용 작업 -->
+                <action name="if" condition="${modules_config.Func_7_ShortsAutoPlay_enabled} == true">
+                    <action name="call_macro" macro="Func_7_ShortsAutoPlay"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_8_VideoAutoView_enabled} == true">
+                    <action name="call_macro" macro="Func_8_VideoAutoView"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_9_LikeAutomation_enabled} == true">
+                    <action name="call_macro" macro="Func_9_LikeAutomation"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_10_CommentAutomation_enabled} == true">
+                    <action name="call_macro" macro="Func_10_CommentAutomation"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_11_SubscribeAutomation_enabled} == true">
+                    <action name="call_macro" macro="Func_11_SubscribeAutomation"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_12_HashtagSearchView_enabled} == true">
+                    <action name="call_macro" macro="Func_12_HashtagSearchView"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_13_RepeatPlaybackAlgorithm_enabled} == true">
+                    <action name="call_macro" macro="Func_13_RepeatPlaybackAlgorithm"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_14_LiveAutoConnect_enabled} == true">
+                    <action name="call_macro" macro="Func_14_LiveAutoConnect"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_26_ViewAlgorithmAdvanced_enabled} == true">
+                    <action name="call_macro" macro="Func_26_ViewAlgorithmAdvanced"/>
+                </action>
+                
+                <!-- 보안 및 인증 작업 -->
+                <action name="if" condition="${modules_config.Func_18_CookieAutomation_enabled} == true">
+                    <action name="call_macro" macro="Func_18_CookieAutomation"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_19_UAManagement_enabled} == true">
+                    <action name="call_macro" macro="Func_19_UAManagement"/>
+                </action>
+                <action name="if" condition="${modules_config.Func_22_SMSVerification_enabled} == true">
+                    <action name="call_macro" macro="Func_22_SMSVerification"/>
+                </action>
+                
+                <!-- 순환 알고리즘 -->
+                <action name="if" condition="${modules_config.Func_23_CyclingAlgorithm_enabled} == true">
+                    <action name="call_macro" macro="Func_23_CyclingAlgorithm"/>
+                </action>
+            </action>
+            
+            <!-- 실행 로그 기록 -->
+            <action name="call_macro" macro="Func_27_CommentAutoInsert"/>
+            
+            <action name="log" params="Full automation routine completed"/>
+            <action name="set_variable" name="automation_end_time" value="${current_date} ${current_time}"/>
+            <action name="set_variable" name="bot_running" value="false"/>
+        </macro>
+    </macro_group>
+
+    <execution_manager>
+        <thread_pool size="500">
+            <thread_group name="account_creation" max_threads="50"/>
+            <thread_group name="security" max_threads="50"/>
+            <thread_group name="channel" max_threads="50"/>
+            <thread_group name="viewing" max_threads="100"/>
+            <thread_group name="interaction" max_threads="100"/>
+            <thread_group name="live" max_threads="50"/>
+            <thread_group name="proxy" max_threads="50"/>
+            <thread_group name="automation" max_threads="50"/>
+        </thread_pool>
+        
+        <execution_plan>
+            <phase name="startup" parallel="false">
+                <include macro="start"/>
+            </phase>
+        </execution_plan>
+    </execution_manager>
+
+    <variables>
+        <!-- 기본 변수 -->
+        <variable name="search_keyword" default="trending"/>
+        <variable name="title_list" default="['video1','video2','video3']"/>
+        <variable name="min_viewing_time" default="30"/>
+        <variable name="max_viewing_time" default="120"/>
+        <variable name="view_duration" default="60"/>
+        <variable name="max_views" default="5"/>
+        <variable name="min_view_time" default="30"/>
+        <variable name="channel_list" default="['https://www.youtube.com/c/channel1','https://www.youtube.com/c/channel2']"/>
+        <variable name="channel_view_time" default="60"/>
+        
+        <!-- Gmail 관련 변수 -->
+        <variable name="gmail_username" default=""/>
+        <variable name="gmail_password" default=""/>
+        <variable name="recovery_email" default=""/>
+        <variable name="recovery_phone" default=""/>
+        <variable name="enable_2fa" default="true"/>
+        <variable name="enable_app_passwords" default="true"/>
+        <variable name="app_password" default=""/>
+        
+        <!-- 프로필 업데이트 변수 -->
+        <variable name="change_profile_picture" default="false"/>
+        <variable name="profile_image_path" default=""/>
+        <variable name="change_name" default="false"/>
+        <variable name="new_first_name" default=""/>
+        <variable name="new_last_name" default=""/>
+        <variable name="change_channel_name" default="false"/>
+        <variable name="new_channel_name" default=""/>
+        
+        <!-- 채널 생성 변수 -->
+        <variable name="channel_name" default="HD Grace Channel"/>
+        <variable name="channel_description" default="Welcome to my channel!"/>
+        <variable name="channel_tags" default="vlog,funny,trending"/>
+        <variable name="channel_category" default="22"/>
+        
+        <!-- Shorts 변수 -->
+        <variable name="shorts_count" default="10"/>
+        <variable name="shorts_duration" default="60"/>
+        
+        <!-- 시청 변수 -->
+        <variable name="video_url_list" default="['https://www.youtube.com/watch?v=example1','https://www.youtube.com/watch?v=example2']"/>
+        <variable name="view_cycles" default="5"/>
+        <variable name="random_view_time" default="${random(45,120)}"/>
+        
+        <!-- 좋아요 변수 -->
+        <variable name="like_video_list" default="['https://www.youtube.com/watch?v=like1','https://www.youtube.com/watch?v=like2']"/>
+        
+        <!-- 댓글 변수 -->
+        <variable name="comment_video_list" default="['https://www.youtube.com/watch?v=comment1','https://www.youtube.com/watch?v=comment2']"/>
+        <variable name="comment_text" default="Great video! Thanks for sharing!"/>
+        <variable name="comment_delay" default="60"/>
+        
+        <!-- 구독 변수 -->
+        <variable name="subscribe_channel_list" default="['https://www.youtube.com/c/channel1','https://www.youtube.com/c/channel2']"/>
+        
+        <!-- 해시태그 변수 -->
+        <variable name="hashtag_list" default="['#shorts','#viral','#trending','popular music','funny videos']"/>
+        <variable name="videos_to_watch" default="3"/>
+        <variable name="hashtag_view_duration" default="45"/>
+        
+        <!-- 반복 재생 변수 -->
+        <variable name="repeat_video_list" default="['https://www.youtube.com/watch?v=repeat1','https://www.youtube.com/watch?v=repeat2']"/>
+        <variable name="view_cycles" default="10"/>
+        
+        <!-- 라이브 변수 -->
+        <variable name="live_stream_list" default="['https://www.youtube.com/watch?v=live1','https://www.youtube.com/watch?v=live2']"/>
+        <variable name="live_stay_duration" default="300"/>
+        
+        <!-- 다국어 변수 -->
+        <variable name="language_setting" default="ko_KR"/>
+        <variable name="country_setting" default="KR"/>
+        
+        <!-- 프록시 변수 -->
+        <variable name="proxy_type" default="random_kr_proxy"/>
+        <variable name="proxy_list" default=""/>
+        
+        <!-- 브라우저 지문 변수 -->
+        <variable name="fingerprint_api_key" default=""/>
+        
+        <!-- 쿠키 변수 -->
+        <variable name="save_cookies" default="true"/>
+        <variable name="load_cookies" default="true"/>
+        <variable name="account_name" default="default_account"/>
+        
+        <!-- UA 변수 -->
+        <variable name="backup_ua" default="true"/>
+        <variable name="change_ua" default="false"/>
+        <variable name="new_user_agent" default=""/>
+        <variable name="randomize_ua" default="true"/>
+        
+        <!-- 실행 모드 변수 -->
+        <variable name="execution_mode" default="auto"/>
+        
+        <!-- 구독자 증가 변수 -->
+        <variable name="subscriber_count" default="5"/>
+        <variable name="target_channel_url" default="https://www.youtube.com/channel/UC_target"/>
+        
+        <!-- SMS 인증 변수 -->
+        <variable name="sms_api_key" default=""/>
+        
+        <!-- 순환 알고리즘 변수 -->
+        <variable name="total_cycles" default="20"/>
+        
+        <!-- 파일 경로 변수 -->
+        <variable name="project_file_path" default="hdgraceyoutube.bas"/>
+        
+        <!-- 모듈 활성화 변수 -->
+        <variable name="module_Func_1_GmailAccountCreation_enabled" default="true"/>
+        <variable name="module_Func_2_AccountRecoverySetup_enabled" default="true"/>
+        <variable name="module_Func_3_GmailSecuritySetup_enabled" default="true"/>
+        <variable name="module_Func_4_GmailProfileUpdate_enabled" default="true"/>
+        <variable name="module_Func_5_YouTubeChannelCreation_enabled" default="true"/>
+        <variable name="module_Func_6_ChannelDescriptionTags_enabled" default="true"/>
+        <variable name="module_Func_7_ShortsAutoPlay_enabled" default="true"/>
+        <variable name="module_Func_8_VideoAutoView_enabled" default="true"/>
+        <variable name="module_Func_9_LikeAutomation_enabled" default="true"/>
+        <variable name="module_Func_10_CommentAutomation_enabled" default="true"/>
+        <variable name="module_Func_11_SubscribeAutomation_enabled" default="true"/>
+        <variable name="module_Func_12_HashtagSearchView_enabled" default="true"/>
+        <variable name="module_Func_13_RepeatPlaybackAlgorithm_enabled" default="true"/>
+        <variable name="module_Func_14_LiveAutoConnect_enabled" default="true"/>
+        <variable name="module_Func_15_MultilingualSetup_enabled" default="true"/>
+        <variable name="module_Func_16_RotatingProxy_enabled" default="true"/>
+        <variable name="module_Func_17_BrowserFingerprintRandomization_enabled" default="true"/>
+        <variable name="module_Func_18_CookieAutomation_enabled" default="true"/>
+        <variable name="module_Func_19_UAManagement_enabled" default="true"/>
+        <variable name="module_Func_20_AutoManualSwitch_enabled" default="true"/>
+        <variable name="module_Func_21_SubscriberIncrease_enabled" default="true"/>
+        <variable name="module_Func_22_SMSVerification_enabled" default="true"/>
+        <variable name="module_Func_23_CyclingAlgorithm_enabled" default="true"/>
+        <variable name="module_Func_24_GmailLogin_enabled" default="true"/>
+        <variable name="module_Func_25_GmailSecurity_enabled" default="true"/>
+        <variable name="module_Func_26_ViewAlgorithmAdvanced_enabled" default="true"/>
+        <variable name="module_Func_27_CommentAutoInsert_enabled" default="true"/>
+        
+        <!-- 실행 상태 변수 -->
+        <variable name="bot_running" default="false"/>
+        <variable name="bot_paused" default="false"/>
+        <variable name="automation_start_time" default=""/>
+        <variable name="automation_end_time" default=""/>
+    </variables>
+
+    <ui>
+        <theme>dark</theme>
+        <language>en_US</language>
+        <components>
+            <component name="status_display" position="top_center"/>
+            <component name="progress_bar" position="top_center"/>
+            <component name="log_viewer" position="bottom"/>
+            <component name="settings_panel" position="right"/>
+            <component name="automation_control" position="top_left">
+                <button name="start_button" text="START" color="green" onclick="set_variable('bot_running', 'true'); call_macro('start')"/>
+                <button name="stop_button" text="STOP" color="red" onclick="set_variable('bot_running', 'false')"/>
+                <button name="pause_button" text="PAUSE" color="yellow" onclick="set_variable('bot_paused', 'true')"/>
+                <button name="resume_button" text="RESUME" color="blue" onclick="set_variable('bot_paused', 'false')"/>
+                <button name="comment_button" text="ADD COMMENTS" color="purple" onclick="call_macro('Func_27_CommentAutoInsert')"/>
+            </component>
+        </components>
+    </ui>
+
+    <error_handling>
+        <handler type="timeout">
+            <action name="log" params="Macro execution timed out"/>
+            <action name="retry" max_attempts="3"/>
+        </handler>
+        <handler type="network_error">
+            <action name="log" params="Network error occurred"/>
+            <action name="sleep" delay="2000"/>
+            <action name="retry" max_attempts="3"/>
+        </handler>
+        <handler type="element_not_found">
+            <action name="log" params="Required element not found"/>
+            <action name="wait_seconds" seconds="5"/>
+            <action name="retry" max_attempts="2"/>
+        </handler>
+        <handler type="login_failed">
+            <action name="log" params="Gmail login failed, attempting recovery"/>
+            <action name="call_macro" macro="Func_14_GmailAppeal"/>
+            <action name="wait_seconds" seconds="10"/>
+        </handler>
+    </error_handling>
+</project>
