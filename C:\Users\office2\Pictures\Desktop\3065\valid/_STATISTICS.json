@@ -1,0 +1,12 @@
+{
+    "startTime": 1757262951.4976015,
+    "endTime": 1757262957.3461747,
+    "durationSeconds": 5.85,
+    "errorsCorrected": 59000,
+    "functions": 3065,
+    "actions": 312630,
+    "macros": 0,
+    "ui_elements": 3065,
+    "blocks": 7,
+    "security_features": 5
+}
