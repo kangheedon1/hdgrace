@@ -1,0 +1,36 @@
+# Generated XML output files
+HDGRACE-최종본.XML
+*_STATISTICS.json
+*_VALIDATION.txt
+*.log
+
+# Output directories
+C:\Users\*
+D:\바탕화면\*
+./temp_repos/
+./output/
+./logs/
+./backup/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
